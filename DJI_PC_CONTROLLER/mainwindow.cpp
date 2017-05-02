@@ -46,6 +46,7 @@ void MainWindow::showRawFrame(QByteArray frame_bytes, quint32 frame_num,
 
 void MainWindow::showTelemetry(Telemetry t)
 {
+    static quint64 last_time = t.time;
     ui->velocity_x_edit->setText(QString::number(t.velocity_x));
     ui->velocity_y_edit->setText(QString::number(t.velocity_y));
     ui->velocity_z_edit->setText(QString::number(t.velocity_z));
@@ -56,6 +57,15 @@ void MainWindow::showTelemetry(Telemetry t)
 
     ui->latitude_edit->setText(QString::number(t.latitude));
     ui->longitude_edit->setText(QString::number(t.longitude));
+    ui->altitude_edit->setText(QString::number(t.altitude));
+
+    ui->dtime_edit->setText(QString::number(t.time-last_time));
+    last_time = t.time;
+}
+
+void MainWindow::saveTelemetry(Telemetry t)
+{
+    t.writeToFile("telemetry.txt");
 }
 
 void MainWindow::setMinMaxVelocities(QVector<double> velocities)
@@ -227,6 +237,8 @@ void MainWindow::start_telemetry()
         // get frames from telemetry_getter
         connect(telemetry_getter, SIGNAL(gotTelemetry(Telemetry)),
                 this, SLOT(showTelemetry(Telemetry)));
+        connect(telemetry_getter, SIGNAL(gotTelemetry(Telemetry)),
+                this, SLOT(saveTelemetry(Telemetry)));
 
         // interrupt telemetry receiving
         connect(this, SIGNAL(interrupt_telemetry_receiving()),
